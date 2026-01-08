@@ -30,14 +30,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        // Pass configuration to LevelGenerator
-        LevelGenerator levelGen = FindObjectOfType<LevelGenerator>();
-        if (levelGen != null)
-        {
-            levelGen.width = width + 1;
-            levelGen.height = height + 1;
-            levelGen.length = length + 1;
-            levelGen.SetLevelConfig(density, bombCount, powerUpCount);
-        }
+        // Level configuration is now handled by LevelGenerator.Start()
+        // This prevents timing issues when restarting levels
     }
 }

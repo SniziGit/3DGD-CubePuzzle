@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 public class LevelGenerator : MonoBehaviour
 {
-    public int width = 10;
-    public int length = 10;
-    public int height = 10;
+    public int width;
+    public int length;
+    public int height;
 
     public float density = 0.7f; // probability of wall presence
 
@@ -22,6 +22,9 @@ public class LevelGenerator : MonoBehaviour
         GameManager gameManager = FindObjectOfType<GameManager>();
         if (gameManager != null)
         {
+            width = gameManager.width + 1;
+            height = gameManager.height + 1;
+            length = gameManager.length + 1;
             SetLevelConfig(gameManager.density, gameManager.bombCount, gameManager.powerUpCount);
         }
         
