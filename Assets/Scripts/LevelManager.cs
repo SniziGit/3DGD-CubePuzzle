@@ -15,8 +15,8 @@ public class LevelManager : MonoBehaviour
     public bool isWin;
 
     [Header("Gameplay Settings")]
-    public float bombClearRadius = 2f;
-    public int powerupMoveBonus = 6;
+    [SerializeField] private float bombClearRadius;
+    [SerializeField] private int powerupMoveBonus;
 
     private float timerAccumulator; // for 1-second ticks
 
@@ -29,6 +29,8 @@ public class LevelManager : MonoBehaviour
             timerRemaining = GameManager.Instance.timerDuration;
             bombCount = GameManager.Instance.bombCount;
             powerUpCount = GameManager.Instance.powerUpCount;
+            bombClearRadius = GameManager.Instance.GetBombRadius();
+            powerupMoveBonus = GameManager.Instance.GetPowerUpMoves();
         }
     }
 

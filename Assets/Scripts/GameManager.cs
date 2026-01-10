@@ -13,6 +13,10 @@ public class GameManager : MonoBehaviour
     public int powerUpCount = 3;
     public int timerDuration = 120; // seconds
 
+    [Header("Power-up Settings")]
+    [SerializeField] private float bombRadius = 2f;
+    [SerializeField] private int powerUpMoves = 6;
+
     [Header("Game State")]
     public int initialMoves = 50;
 
@@ -33,4 +37,8 @@ public class GameManager : MonoBehaviour
         // Level configuration is now handled by LevelGenerator.Start()
         // This prevents timing issues when restarting levels
     }
+
+    // Public getters for bomb radius and power-up moves
+    public float GetBombRadius() { return bombRadius; }
+    public int GetPowerUpMoves() { return powerUpMoves; }
 }
