@@ -38,12 +38,18 @@ public class SequenceStep
     public Vector2 endPosition;
     public float animationDuration = 1f;
     public AnimationCurve animationCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+
+    [Header("Skip Settings")]
+    public bool enableSkip = false;
+    [Tooltip("Index of the step to skip to (0-based)")]
+    public int skipToIndex = -1;
 }
 
 public class TypewriterSequence : MonoBehaviour
 {
     [Header("Sequence Settings")]
     public bool playOnStart = true;
+    public bool playOnAwake = false;
     public bool loopSequence = false;
     [SerializeField] private bool useUnscaledTime = true;
     [SerializeField] private SequenceStep[] sequenceSteps;
@@ -62,7 +68,7 @@ public class TypewriterSequence : MonoBehaviour
     }
     private void Awake()
     {
-        if(!playOnStart)
+        if(playOnAwake)
         {
             StartSequence();
         }
@@ -73,6 +79,12 @@ public class TypewriterSequence : MonoBehaviour
         if (isWaitingForInput && Input.GetMouseButtonDown(0))
         {
             isWaitingForInput = false;
+        }
+
+        // Handle skip functionality
+        if (isSequenceRunning && Input.GetMouseButtonDown(0))
+        {
+            CheckAndPerformSkip();
         }
     }
 
@@ -236,6 +248,78 @@ public class TypewriterSequence : MonoBehaviour
             {
                 isSequenceRunning = false;
             }
+        }
+    }
+
+    private void CheckAndPerformSkip()
+    {
+        if (currentStepIndex < sequenceSteps.Length)
+        {
+            SequenceStep currentStep = sequenceSteps[currentStepIndex];
+            
+            if (currentStep.enableSkip && currentStep.skipToIndex >= 0 && currentStep.skipToIndex < sequenceSteps.Length)
+            {
+                SkipToStep(currentStep.skipToIndex);
+            }
+        }
+    }
+
+    public void SkipToStep(int stepIndex)
+    {
+        if (stepIndex < 0 || stepIndex >= sequenceSteps.Length)
+        {
+            return;
+        }
+
+        // Stop any current typewriter effect
+        if (currentTypewriter != null)
+        {
+            currentTypewriter.StopAllCoroutines();
+            currentTypewriter = null;
+        }
+
+        // Stop any running coroutines
+        StopAllCoroutines();
+        
+        // Reset waiting state
+        isWaitingForInput = false;
+        
+        // Play all steps before the target index immediately
+        for (int i = 0; i < stepIndex; i++)
+        {
+            ExecuteStepImmediately(sequenceSteps[i]);
+        }
+        
+        // Set the new step index and process
+        currentStepIndex = stepIndex;
+        ProcessCurrentStep();
+    }
+
+    private void ExecuteStepImmediately(SequenceStep step)
+    {
+        switch (step.actionType)
+        {
+            case SequenceActionType.TypeText:
+                if (step.targetText != null)
+                {
+                    step.targetText.text = step.textToType;
+                }
+                break;
+
+            case SequenceActionType.Wait:
+                // Skip wait steps entirely
+                break;
+
+            case SequenceActionType.WaitForInput:
+                // Skip wait for input steps entirely
+                break;
+
+            case SequenceActionType.UIAnimation:
+                if (step.targetPanel != null && step.uiAnimationType == UIAnimationType.Scroll)
+                {
+                    step.targetPanel.anchoredPosition = step.endPosition;
+                }
+                break;
         }
     }
 }

@@ -8,6 +8,11 @@ public class CubePlanetRotator : MonoBehaviour
     [SerializeField] private float resetSmoothFactor = 8f; // Speed of reset rotation
     [SerializeField] private bool invertVertical = false;
     [SerializeField] private bool invertHorizontal = false;
+    
+    [Header("Zoom Settings")]
+    [SerializeField] private float zoomSpeed = 2f;
+    [SerializeField] private float minZoom = -10f;
+    [SerializeField] private float maxZoom = 10f;
 
     private Vector3 currentRotation;
     private Vector3 rotationVelocity;
@@ -16,12 +21,14 @@ public class CubePlanetRotator : MonoBehaviour
     private Quaternion initialRotation;
     private Vector2 lastMousePosition;
     private Camera mainCamera;
+    private Vector3 initialPosition;
 
     private void Start()
     {
         mainCamera = Camera.main;
         currentRotation = transform.rotation.eulerAngles;
         initialRotation = transform.rotation;
+        initialPosition = transform.position;
     }
 
     private void Update()
@@ -31,6 +38,9 @@ public class CubePlanetRotator : MonoBehaviour
         {
             StartReset();
         }
+
+        // Handle zoom input
+        HandleZoom();
 
         if (isResetting)
         {
@@ -97,13 +107,35 @@ public class CubePlanetRotator : MonoBehaviour
     {
         // Smoothly interpolate rotation back to initial rotation
         transform.rotation = Quaternion.Lerp(transform.rotation, initialRotation, resetSmoothFactor * Time.deltaTime);
+        
+        // Smoothly interpolate position back to initial position
+        transform.position = Vector3.Lerp(transform.position, initialPosition, resetSmoothFactor * Time.deltaTime);
 
         // Check if we're close enough to the target rotation to stop resetting
         if (Quaternion.Angle(transform.rotation, initialRotation) < 0.1f)
         {
             isResetting = false;
             transform.rotation = initialRotation; // Snap to exact rotation
+            transform.position = initialPosition; // Snap to exact position
             currentRotation = initialRotation.eulerAngles;
+        }
+    }
+    
+    private void HandleZoom()
+    {
+        float scrollInput = Input.GetAxis("Mouse ScrollWheel");
+        if (scrollInput != 0)
+        {
+            Vector3 currentPosition = transform.position;
+            float zoomAmount = scrollInput * zoomSpeed;
+            
+            // Apply zoom to Z axis
+            currentPosition.z += zoomAmount;
+            
+            // Clamp the zoom to min/max values
+            currentPosition.z = Mathf.Clamp(currentPosition.z, minZoom, maxZoom);
+            
+            transform.position = currentPosition;
         }
     }
 }

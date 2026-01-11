@@ -19,13 +19,12 @@ public class LevelGenerator : MonoBehaviour
     void Start()
     {
         // Try to get configuration from GameManager
-        GameManager gameManager = FindObjectOfType<GameManager>();
-        if (gameManager != null)
+        if (GameManager.Instance != null)
         {
-            width = gameManager.width + 1;
-            height = gameManager.height + 1;
-            length = gameManager.length + 1;
-            SetLevelConfig(gameManager.density, gameManager.bombCount, gameManager.powerUpCount);
+            width = GameManager.Instance.width;
+            height = GameManager.Instance.height;
+            length = GameManager.Instance.length;
+            SetLevelConfig(GameManager.Instance.density, GameManager.Instance.bombCount, GameManager.Instance.powerUpCount);
         }
         
         GenerateLevel();
@@ -95,19 +94,33 @@ public class LevelGenerator : MonoBehaviour
             Instantiate(bomb, emptyPositions[i], Quaternion.identity, transform);
         }
 
-        // --- Powerup placement ---
-        // Spawn powerups at remaining empty positions
+        //Spawn powerups at remaining empty positions
         int powerupsToSpawn = Mathf.Min(powerUpCount, emptyPositions.Count - bombsToSpawn);
         for (int i = bombsToSpawn; i < bombsToSpawn + powerupsToSpawn; i++)
         {
             Instantiate(powerUp, emptyPositions[i], Quaternion.identity, transform);
         }
 
-        // --- Re-parent children to this object's parent ---
-        Transform parent = transform.parent;
-        while (transform.childCount > 0)
+        // Calculate the centre of the generated level
+        Vector3 levelCentre = new Vector3(-width / 2f, -height / 2f, -length / 2f);
+        
+        //Find CubePlanetRotator and parent children to it
+        CubePlanetRotator rotator = FindObjectOfType<CubePlanetRotator>();
+        if (rotator != null)
         {
-            transform.GetChild(0).SetParent(parent, true);
+            //Re-parent children directly to rotator
+            while (transform.childCount > 0)
+            {
+                Transform child = transform.GetChild(0);
+                child.SetParent(rotator.transform, true);
+                
+                // Adjust child position so level centre aligns with rotator pivot
+                child.position += rotator.transform.position - levelCentre;
+            }
+        }
+        else
+        {
+            Debug.LogWarning("CubePlanetRotator not found in scene!");
         }
     }
 }

@@ -38,7 +38,7 @@ public class HUDControl : MonoBehaviour
         // Update moves display
         if (movesText != null)
         {
-            movesText.text = $"Moves: {levelManager.GetMovesRemaining()}";
+            movesText.text = $"{levelManager.GetMovesRemaining()}";
         }
 
         // Update timer display (formatted as minutes:seconds) using integer seconds
@@ -47,13 +47,13 @@ public class HUDControl : MonoBehaviour
             int timeRemaining = levelManager.GetTimerRemaining();
             int minutes = timeRemaining / 60;
             int seconds = timeRemaining % 60;
-            timerText.text = $"Time: {minutes:00}:{seconds:00}";
+            timerText.text = $"{minutes:00}:{seconds:00}";
         }
 
         // Update bomb count display
         if (bombCountText != null)
         {
-            bombCountText.text = $"Bombs: {levelManager.GetBombCount()}";
+            bombCountText.text = $"{ levelManager.GetBombCount()}";
         }
     }
 

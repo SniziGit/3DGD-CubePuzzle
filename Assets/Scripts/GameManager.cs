@@ -38,7 +38,9 @@ public class GameManager : MonoBehaviour
         // This prevents timing issues when restarting levels
     }
 
-    // Public getters for bomb radius and power-up moves
+    // Public getters and setters for bomb radius and power-up moves
     public float GetBombRadius() { return bombRadius; }
+    public void SetBombRadius(float radius) { bombRadius = radius; }
     public int GetPowerUpMoves() { return powerUpMoves; }
+    public void SetPowerUpMoves(int moves) { powerUpMoves = moves; }
 }
