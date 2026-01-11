@@ -14,6 +14,7 @@ public enum SequenceActionType
     Wait,         // Wait for specified seconds
     WaitForInput, // Wait for user input (e.g., mouse click)
     UIAnimation,  // Play a UI animation
+    SetActive,    // Set active state of a GameObject
 }
 
 [System.Serializable]
@@ -39,6 +40,10 @@ public class SequenceStep
     public float animationDuration = 1f;
     public AnimationCurve animationCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
+    [Header("Set Active Settings")]
+    public GameObject targetObject;
+    public bool setActiveState = true;
+
     [Header("Skip Settings")]
     public bool enableSkip = false;
     [Tooltip("Index of the step to skip to (0-based)")]
@@ -54,6 +59,12 @@ public class TypewriterSequence : MonoBehaviour
     [SerializeField] private bool useUnscaledTime = true;
     [SerializeField] private SequenceStep[] sequenceSteps;
 
+    [Header("Typewriter Audio Settings")]
+    [SerializeField] private AudioSource typewriterAudioSource;
+    [SerializeField] private AudioClip typewriterSound;
+    [SerializeField] private float typewriterMinPitch = 0.9f;
+    [SerializeField] private float typewriterMaxPitch = 1.1f;
+
     private int currentStepIndex = 0;
     private TypewriterEffect currentTypewriter;
     private bool isSequenceRunning = false;
@@ -68,6 +79,13 @@ public class TypewriterSequence : MonoBehaviour
     }
     private void Awake()
     {
+        // Ensure we have a typewriter audio source
+        if (typewriterAudioSource == null)
+        {
+            typewriterAudioSource = gameObject.AddComponent<AudioSource>();
+            typewriterAudioSource.playOnAwake = false;
+        }
+
         if(playOnAwake)
         {
             StartSequence();
@@ -143,6 +161,10 @@ public class TypewriterSequence : MonoBehaviour
             case SequenceActionType.UIAnimation:
                 StartCoroutine(HandleUIAnimationStep(currentStep));
                 break;
+
+            case SequenceActionType.SetActive:
+                HandleSetActiveStep(currentStep);
+                break;
         }
     }
 
@@ -161,7 +183,38 @@ public class TypewriterSequence : MonoBehaviour
             currentTypewriter = step.targetText.gameObject.AddComponent<TypewriterEffect>();
         }
 
+        // Configure the typewriter effect with our dedicated audio source
         currentTypewriter.charactersPerSecond = step.typeSpeed;
+        
+        // Use reflection or public method to set audio source if available
+        // For now, we'll access the private field through the component
+        var audioSourceField = typeof(TypewriterEffect).GetField("audioSource", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        if (audioSourceField != null)
+        {
+            audioSourceField.SetValue(currentTypewriter, typewriterAudioSource);
+        }
+        
+        var typeSoundField = typeof(TypewriterEffect).GetField("typeSound", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        if (typeSoundField != null && typewriterSound != null)
+        {
+            typeSoundField.SetValue(currentTypewriter, typewriterSound);
+        }
+        
+        var minPitchField = typeof(TypewriterEffect).GetField("minPitch", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        if (minPitchField != null)
+        {
+            minPitchField.SetValue(currentTypewriter, typewriterMinPitch);
+        }
+        
+        var maxPitchField = typeof(TypewriterEffect).GetField("maxPitch", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        if (maxPitchField != null)
+        {
+            maxPitchField.SetValue(currentTypewriter, typewriterMaxPitch);
+        }
         currentTypewriter.SetText(step.textToType);
         currentTypewriter.StartTyping();
 
@@ -201,13 +254,27 @@ public class TypewriterSequence : MonoBehaviour
         switch (step.uiAnimationType)
         {
             case UIAnimationType.Scroll:
-                yield return StartCoroutine(AnimatePanelScroll(
-                    step.targetPanel,
-                    step.startPosition,
-                    step.endPosition,
-                    step.animationDuration,
-                    step.animationCurve
-                ));
+                if (step.waitForCompletion)
+                {
+                    yield return StartCoroutine(AnimatePanelScroll(
+                        step.targetPanel,
+                        step.startPosition,
+                        step.endPosition,
+                        step.animationDuration,
+                        step.animationCurve
+                    ));
+                }
+                else
+                {
+                    // Start the animation but don't wait for it to complete
+                    StartCoroutine(AnimatePanelScroll(
+                        step.targetPanel,
+                        step.startPosition,
+                        step.endPosition,
+                        step.animationDuration,
+                        step.animationCurve
+                    ));
+                }
                 break;
         }
 
@@ -228,6 +295,20 @@ public class TypewriterSequence : MonoBehaviour
         }
 
         panel.anchoredPosition = endPos;
+    }
+
+    private void HandleSetActiveStep(SequenceStep step)
+    {
+        if (step.targetObject != null)
+        {
+            step.targetObject.SetActive(step.setActiveState);
+        }
+        else
+        {
+            Debug.LogWarning("No target object assigned for SetActive step!");
+        }
+        
+        MoveToNextStep();
     }
 
     private void MoveToNextStep()
@@ -318,6 +399,13 @@ public class TypewriterSequence : MonoBehaviour
                 if (step.targetPanel != null && step.uiAnimationType == UIAnimationType.Scroll)
                 {
                     step.targetPanel.anchoredPosition = step.endPosition;
+                }
+                break;
+
+            case SequenceActionType.SetActive:
+                if (step.targetObject != null)
+                {
+                    step.targetObject.SetActive(step.setActiveState);
                 }
                 break;
         }

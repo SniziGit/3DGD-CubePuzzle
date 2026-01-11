@@ -18,10 +18,13 @@ public class LevelManager : MonoBehaviour
     [SerializeField] private float bombClearRadius;
     [SerializeField] private int powerupMoveBonus;
 
-    private float timerAccumulator; // for 1-second ticks
+    [System.NonSerialized] private float timerAccumulator; // for 1-second ticks
 
     void Start()
     {
+        // Reset time scale to ensure game starts normally
+        Time.timeScale = 1f;
+        
         // Initialize values from GameManager
         if (GameManager.Instance != null)
         {
