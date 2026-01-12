@@ -1932,8 +1932,8 @@ MonoBehaviour:
       m_RotationOrder: 4
     targetObject: {fileID: 1727798669}
     setActiveState: 1
-    enableSkip: 0
-    skipToIndex: 0
+    enableSkip: 1
+    skipToIndex: 2
   - actionType: 4
     targetText: {fileID: 2099993029}
     textToType: 
@@ -2029,8 +2029,8 @@ MonoBehaviour:
       m_RotationOrder: 0
     targetObject: {fileID: 1727798669}
     setActiveState: 1
-    enableSkip: 0
-    skipToIndex: 0
+    enableSkip: 1
+    skipToIndex: 6
   - actionType: 4
     targetText: {fileID: 2099993029}
     textToType: 
@@ -2130,8 +2130,8 @@ MonoBehaviour:
       m_RotationOrder: 0
     targetObject: {fileID: 1459938262}
     setActiveState: 1
-    enableSkip: 0
-    skipToIndex: 0
+    enableSkip: 1
+    skipToIndex: 10
   - actionType: 4
     targetText: {fileID: 2099993029}
     textToType: 
@@ -4981,7 +4981,179 @@ MonoBehaviour:
   playOnAwake: 0
   loopSequence: 0
   useUnscaledTime: 1
-  sequenceSteps: []
+  sequenceSteps:
+  - actionType: 4
+    targetText: {fileID: 2099993029}
+    textToType: 
+    typeSpeed: 40
+    waitForCompletion: 1
+    duration: 0
+    uiAnimationType: 0
+    targetPanel: {fileID: 1459938263}
+    targetTransform: {fileID: 0}
+    startPosition: {x: 0, y: 0}
+    endPosition: {x: 0, y: 0}
+    startTransformPosition: {x: 0, y: 0, z: 0}
+    endTransformPosition: {x: 0, y: 0, z: 0}
+    animationDuration: 0
+    animationCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 0
+      m_PostInfinity: 0
+      m_RotationOrder: 4
+    targetObject: {fileID: 1459938262}
+    setActiveState: 0
+    enableSkip: 0
+    skipToIndex: 0
+  - actionType: 0
+    targetText: {fileID: 2099993029}
+    textToType: "Fantastic. That ia all the fundementals of Galaxy Defusers this
+      user needs to know. \nRemember: Don't run out of time, don't run out of moves.\n"
+    typeSpeed: 40
+    waitForCompletion: 1
+    duration: 0
+    uiAnimationType: 0
+    targetPanel: {fileID: 0}
+    targetTransform: {fileID: 0}
+    startPosition: {x: 0, y: 0}
+    endPosition: {x: 0, y: 0}
+    startTransformPosition: {x: 0, y: 0, z: 0}
+    endTransformPosition: {x: 0, y: 0, z: 0}
+    animationDuration: 0
+    animationCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 0
+      m_PostInfinity: 0
+      m_RotationOrder: 4
+    targetObject: {fileID: 0}
+    setActiveState: 0
+    enableSkip: 1
+    skipToIndex: 2
+  - actionType: 4
+    targetText: {fileID: 2099993029}
+    textToType: 
+    typeSpeed: 40
+    waitForCompletion: 1
+    duration: 0
+    uiAnimationType: 0
+    targetPanel: {fileID: 0}
+    targetTransform: {fileID: 0}
+    startPosition: {x: 0, y: 0}
+    endPosition: {x: 0, y: 0}
+    startTransformPosition: {x: 0, y: 0, z: 0}
+    endTransformPosition: {x: 0, y: 0, z: 0}
+    animationDuration: 0
+    animationCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 0
+      m_PostInfinity: 0
+      m_RotationOrder: 4
+    targetObject: {fileID: 1459938262}
+    setActiveState: 1
+    enableSkip: 0
+    skipToIndex: 0
+  - actionType: 2
+    targetText: {fileID: 2099993029}
+    textToType: 
+    typeSpeed: 40
+    waitForCompletion: 1
+    duration: 0
+    uiAnimationType: 0
+    targetPanel: {fileID: 0}
+    targetTransform: {fileID: 0}
+    startPosition: {x: 0, y: 0}
+    endPosition: {x: 0, y: 0}
+    startTransformPosition: {x: 0, y: 0, z: 0}
+    endTransformPosition: {x: 0, y: 0, z: 0}
+    animationDuration: 0
+    animationCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 0
+      m_PostInfinity: 0
+      m_RotationOrder: 4
+    targetObject: {fileID: 1459938262}
+    setActiveState: 1
+    enableSkip: 0
+    skipToIndex: 0
+  - actionType: 4
+    targetText: {fileID: 2099993029}
+    textToType: 
+    typeSpeed: 40
+    waitForCompletion: 1
+    duration: 0
+    uiAnimationType: 0
+    targetPanel: {fileID: 0}
+    targetTransform: {fileID: 0}
+    startPosition: {x: 0, y: 0}
+    endPosition: {x: 0, y: 0}
+    startTransformPosition: {x: 0, y: 0, z: 0}
+    endTransformPosition: {x: 0, y: 0, z: 0}
+    animationDuration: 0
+    animationCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 0
+      m_PostInfinity: 0
+      m_RotationOrder: 4
+    targetObject: {fileID: 1459938262}
+    setActiveState: 0
+    enableSkip: 0
+    skipToIndex: 0
+  - actionType: 0
+    targetText: {fileID: 2099993029}
+    textToType: '<<<End of the tutorial>>>
+
+      Please exit to main menu from pause
+      screen.'
+    typeSpeed: 40
+    waitForCompletion: 1
+    duration: 0
+    uiAnimationType: 0
+    targetPanel: {fileID: 0}
+    targetTransform: {fileID: 0}
+    startPosition: {x: 0, y: 0}
+    endPosition: {x: 0, y: 0}
+    startTransformPosition: {x: 0, y: 0, z: 0}
+    endTransformPosition: {x: 0, y: 0, z: 0}
+    animationDuration: 0
+    animationCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 0
+      m_PostInfinity: 0
+      m_RotationOrder: 0
+    targetObject: {fileID: 0}
+    setActiveState: 0
+    enableSkip: 0
+    skipToIndex: 0
+  - actionType: 0
+    targetText: {fileID: 2099993029}
+    textToType: 
+    typeSpeed: 40
+    waitForCompletion: 1
+    duration: 0
+    uiAnimationType: 0
+    targetPanel: {fileID: 0}
+    targetTransform: {fileID: 0}
+    startPosition: {x: 0, y: 0}
+    endPosition: {x: 0, y: 0}
+    startTransformPosition: {x: 0, y: 0, z: 0}
+    endTransformPosition: {x: 0, y: 0, z: 0}
+    animationDuration: 0
+    animationCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 0
+      m_PostInfinity: 0
+      m_RotationOrder: 0
+    targetObject: {fileID: 1459938262}
+    setActiveState: 0
+    enableSkip: 0
+    skipToIndex: 0
   typewriterAudioSource: {fileID: 0}
   typewriterSound: {fileID: 0}
   typewriterMinPitch: 0.9
