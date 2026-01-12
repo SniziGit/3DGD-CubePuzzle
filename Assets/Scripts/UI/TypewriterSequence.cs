@@ -5,7 +5,8 @@ using TMPro;
 
 public enum UIAnimationType
 {
-    Scroll
+    Scroll,
+    Transform
 }
 
 public enum SequenceActionType
@@ -35,8 +36,11 @@ public class SequenceStep
     [Header("UI Animation Settings")]
     public UIAnimationType uiAnimationType;
     public RectTransform targetPanel;
+    public Transform targetTransform;
     public Vector2 startPosition;
     public Vector2 endPosition;
+    public Vector3 startTransformPosition;
+    public Vector3 endTransformPosition;
     public float animationDuration = 1f;
     public AnimationCurve animationCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
@@ -244,9 +248,9 @@ public class TypewriterSequence : MonoBehaviour
 
     private IEnumerator HandleUIAnimationStep(SequenceStep step)
     {
-        if (step.targetPanel == null)
+        if (step.targetPanel == null && step.targetTransform == null)
         {
-            Debug.LogWarning("No target panel assigned for UI animation step!");
+            Debug.LogWarning("No target panel or transform assigned for UI animation step!");
             MoveToNextStep();
             yield break;
         }
@@ -276,6 +280,30 @@ public class TypewriterSequence : MonoBehaviour
                     ));
                 }
                 break;
+                
+            case UIAnimationType.Transform:
+                if (step.waitForCompletion)
+                {
+                    yield return StartCoroutine(AnimateTransform(
+                        step.targetTransform,
+                        step.startTransformPosition,
+                        step.endTransformPosition,
+                        step.animationDuration,
+                        step.animationCurve
+                    ));
+                }
+                else
+                {
+                    // Start the animation but don't wait for it to complete
+                    StartCoroutine(AnimateTransform(
+                        step.targetTransform,
+                        step.startTransformPosition,
+                        step.endTransformPosition,
+                        step.animationDuration,
+                        step.animationCurve
+                    ));
+                }
+                break;
         }
 
         MoveToNextStep();
@@ -295,6 +323,22 @@ public class TypewriterSequence : MonoBehaviour
         }
 
         panel.anchoredPosition = endPos;
+    }
+    
+    private IEnumerator AnimateTransform(Transform target, Vector3 startPos, Vector3 endPos, float duration, AnimationCurve curve)
+    {
+        float elapsed = 0f;
+        target.position = startPos;
+
+        while (elapsed < duration)
+        {
+            float t = curve.Evaluate(elapsed / duration);
+            target.position = Vector3.Lerp(startPos, endPos, t);
+            elapsed += useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
+            yield return null;
+        }
+
+        target.position = endPos;
     }
 
     private void HandleSetActiveStep(SequenceStep step)
@@ -399,6 +443,10 @@ public class TypewriterSequence : MonoBehaviour
                 if (step.targetPanel != null && step.uiAnimationType == UIAnimationType.Scroll)
                 {
                     step.targetPanel.anchoredPosition = step.endPosition;
+                }
+                else if (step.targetTransform != null && step.uiAnimationType == UIAnimationType.Transform)
+                {
+                    step.targetTransform.position = step.endTransformPosition;
                 }
                 break;
 

@@ -115,7 +115,8 @@ public class LevelGenerator : MonoBehaviour
                 child.SetParent(rotator.transform, true);
                 
                 // Adjust child position so level centre aligns with rotator pivot
-                child.position += rotator.transform.position - levelCentre;
+                // We need to offset by the negative of the level center to align it with (0,0,0) relative to rotator
+                child.position -= levelCentre;
             }
         }
         else
