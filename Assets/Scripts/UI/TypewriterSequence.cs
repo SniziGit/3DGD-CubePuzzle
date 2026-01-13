@@ -3,12 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
+/// <summary>
+/// Types of UI animations supported by the sequence system.
+/// </summary>
 public enum UIAnimationType
 {
-    Scroll,
-    Transform
+    Scroll,     // Animate RectTransform anchored position
+    Transform   // Animate Transform position
 }
 
+/// <summary>
+/// Types of actions that can be performed in a sequence.
+/// Each action represents a different step in the typewriter sequence.
+/// </summary>
 public enum SequenceActionType
 {
     TypeText,     // Type out text with TypewriterEffect
@@ -18,62 +25,75 @@ public enum SequenceActionType
     SetActive,    // Set active state of a GameObject
 }
 
+/// <summary>
+/// Represents a single step in a typewriter sequence.
+/// Each step can perform different actions like typing text, waiting, or playing animations.
+/// </summary>
 [System.Serializable]
 public class SequenceStep
 {
     public SequenceActionType actionType;
 
     [Header("TypeText Settings")]
-    public TextMeshProUGUI targetText;
+    public TextMeshProUGUI targetText;           // Text component to animate
     [TextArea(3, 10)]
-    public string textToType = "";
-    public float typeSpeed = 20f;
-    public bool waitForCompletion = true;
+    public string textToType = "";                // Text to display
+    public float typeSpeed = 20f;                 // Characters per second
+    public bool waitForCompletion = true;        // Wait for typing to finish before next step
 
     [Header("Wait Settings")]
-    public float duration = 1f;
+    public float duration = 1f;                  // Duration to wait in seconds
 
     [Header("UI Animation Settings")]
-    public UIAnimationType uiAnimationType;
-    public RectTransform targetPanel;
-    public Transform targetTransform;
-    public Vector2 startPosition;
-    public Vector2 endPosition;
-    public Vector3 startTransformPosition;
-    public Vector3 endTransformPosition;
-    public float animationDuration = 1f;
-    public AnimationCurve animationCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+    public UIAnimationType uiAnimationType;       // Type of animation to play
+    public RectTransform targetPanel;             // Panel to scroll (for Scroll type)
+    public Transform targetTransform;             // Transform to move (for Transform type)
+    public Vector2 startPosition;                 // Start position for Scroll animations
+    public Vector2 endPosition;                   // End position for Scroll animations
+    public Vector3 startTransformPosition;        // Start position for Transform animations
+    public Vector3 endTransformPosition;          // End position for Transform animations
+    public float animationDuration = 1f;          // Length of animation
+    public AnimationCurve animationCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);  // Animation easing
 
     [Header("Set Active Settings")]
-    public GameObject targetObject;
-    public bool setActiveState = true;
+    public GameObject targetObject;                // GameObject to activate/deactivate
+    public bool setActiveState = true;            // True to activate, false to deactivate
 
     [Header("Skip Settings")]
-    public bool enableSkip = false;
+    public bool enableSkip = false;               // Allow skipping to another step
     [Tooltip("Index of the step to skip to (0-based)")]
-    public int skipToIndex = -1;
+    public int skipToIndex = -1;                  // Target step index for skipping
 }
 
+/// <summary>
+/// Manages a sequence of typewriter effects and UI animations.
+/// Controls the timing and execution of multiple steps including text typing,
+/// waiting, user input, UI animations, and GameObject activation.
+/// </summary>
 public class TypewriterSequence : MonoBehaviour
 {
     [Header("Sequence Settings")]
-    public bool playOnStart = true;
-    public bool playOnAwake = false;
-    public bool loopSequence = false;
-    [SerializeField] private bool useUnscaledTime = true;
-    [SerializeField] private SequenceStep[] sequenceSteps;
+    public bool playOnStart = true;               // Auto-start sequence on Start()
+    public bool playOnAwake = false;              // Auto-start sequence on Awake()
+    public bool loopSequence = false;              // Loop the sequence indefinitely
+    [SerializeField] private bool useUnscaledTime = true;  // Use unscaled time for pause-resistant timing
+    [SerializeField] private SequenceStep[] sequenceSteps;  // Array of sequence steps to execute
 
     [Header("Typewriter Audio Settings")]
-    [SerializeField] private AudioSource typewriterAudioSource;
-    [SerializeField] private AudioClip typewriterSound;
-    [SerializeField] private float typewriterMinPitch = 0.9f;
-    [SerializeField] private float typewriterMaxPitch = 1.1f;
+    [SerializeField] private AudioSource typewriterAudioSource;  // Audio source for typing sounds
+    [SerializeField] private AudioClip typewriterSound;          // Sound clip for typing
+    [SerializeField] private float typewriterMinPitch = 0.9f;   // Minimum pitch variation
+    [SerializeField] private float typewriterMaxPitch = 1.1f;   // Maximum pitch variation
 
-    private int currentStepIndex = 0;
-    private TypewriterEffect currentTypewriter;
-    private bool isSequenceRunning = false;
-    private bool isWaitingForInput = false;
+    // Runtime state variables
+    private int currentStepIndex = 0;             // Current step being executed
+    private TypewriterEffect currentTypewriter;    // Reference to active typewriter effect
+    private bool isSequenceRunning = false;       // Flag indicating if sequence is active
+    private bool isWaitingForInput = false;       // Flag waiting for user input
 
+    /// <summary>
+    /// Start sequence automatically if playOnStart is enabled.
+    /// </summary>
     private void Start()
     {
         if (playOnStart)
@@ -81,6 +101,10 @@ public class TypewriterSequence : MonoBehaviour
             StartSequence();
         }
     }
+
+    /// <summary>
+    /// Initialize component and ensure audio source is available.
+    /// </summary>
     private void Awake()
     {
         // Ensure we have a typewriter audio source
@@ -96,58 +120,97 @@ public class TypewriterSequence : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Handle input events for waiting and skipping.
+    /// </summary>
     private void Update()
     {
+        // Check for user input when waiting for input step
         if (isWaitingForInput && Input.GetMouseButtonDown(0))
         {
             isWaitingForInput = false;
         }
 
-        // Handle skip functionality
+        // Handle skip functionality during sequence
         if (isSequenceRunning && Input.GetMouseButtonDown(0))
         {
             CheckAndPerformSkip();
         }
     }
 
+    /// <summary>
+    /// Start executing the sequence from the beginning.
+    /// Clears all text components and begins processing steps.
+    /// </summary>
     public void StartSequence()
     {
-        if (isSequenceRunning) return;
+        if (isSequenceRunning) return;  // Prevent multiple simultaneous sequences
 
+        ClearAllTextComponents();  // Reset all text displays
+        
         currentStepIndex = 0;
         isSequenceRunning = true;
-        ProcessCurrentStep();
+        ProcessCurrentStep();  // Begin first step
     }
 
+    /// <summary>
+    /// Stop the sequence immediately and clean up resources.
+    /// </summary>
     public void StopSequence()
     {
+        // Stop any active typewriter effect
         if (currentTypewriter != null)
         {
             currentTypewriter.StopAllCoroutines();
             currentTypewriter = null;
         }
+        
+        // Stop all running coroutines
         StopAllCoroutines();
         isSequenceRunning = false;
         isWaitingForInput = false;
     }
 
+    /// <summary>
+    /// Clear all text components used in the sequence.
+    /// Called before starting a new sequence to ensure clean state.
+    /// </summary>
+    private void ClearAllTextComponents()
+    {
+        if (sequenceSteps == null) return;
+
+        foreach (SequenceStep step in sequenceSteps)
+        {
+            if (step.targetText != null)
+            {
+                step.targetText.text = "";  // Clear text display
+            }
+        }
+    }
+
+    /// <summary>
+    /// Execute the current step based on its action type.
+    /// Handles looping logic and delegates to appropriate handlers.
+    /// </summary>
     private void ProcessCurrentStep()
     {
+        // Check if we've reached the end of the sequence
         if (currentStepIndex >= sequenceSteps.Length)
         {
             if (loopSequence)
             {
-                currentStepIndex = 0;
+                currentStepIndex = 0;  // Reset to beginning for loop
             }
             else
             {
-                isSequenceRunning = false;
+                isSequenceRunning = false;  // End sequence
                 return;
             }
         }
 
         SequenceStep currentStep = sequenceSteps[currentStepIndex];
 
+        // Execute the appropriate handler based on action type
         switch (currentStep.actionType)
         {
             case SequenceActionType.TypeText:
@@ -172,8 +235,13 @@ public class TypewriterSequence : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Handle text typing steps using the TypewriterEffect component.
+    /// Configures audio settings and manages the typing animation.
+    /// </summary>
     private IEnumerator HandleTypeTextStep(SequenceStep step)
     {
+        // Check for valid target text
         if (step.targetText == null)
         {
             Debug.LogWarning("No target text assigned for typewriter step!");
@@ -181,6 +249,7 @@ public class TypewriterSequence : MonoBehaviour
             yield break;
         }
 
+        // Get or create TypewriterEffect component
         currentTypewriter = step.targetText.GetComponent<TypewriterEffect>();
         if (currentTypewriter == null)
         {
@@ -190,8 +259,7 @@ public class TypewriterSequence : MonoBehaviour
         // Configure the typewriter effect with our dedicated audio source
         currentTypewriter.charactersPerSecond = step.typeSpeed;
         
-        // Use reflection or public method to set audio source if available
-        // For now, we'll access the private field through the component
+        // Use reflection to set private audio settings on TypewriterEffect
         var audioSourceField = typeof(TypewriterEffect).GetField("audioSource", 
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         if (audioSourceField != null)
@@ -219,9 +287,12 @@ public class TypewriterSequence : MonoBehaviour
         {
             maxPitchField.SetValue(currentTypewriter, typewriterMaxPitch);
         }
+        
+        // Start the typing animation
         currentTypewriter.SetText(step.textToType);
         currentTypewriter.StartTyping();
 
+        // Wait for completion if required
         if (step.waitForCompletion)
         {
             yield return new WaitUntil(() => !currentTypewriter.IsTyping);
@@ -230,24 +301,40 @@ public class TypewriterSequence : MonoBehaviour
         MoveToNextStep();
     }
 
+    /// <summary>
+    /// Handle wait steps by pausing for the specified duration.
+    /// </summary>
     private IEnumerator HandleWaitStep(float duration)
     {
+        // Wait for the specified duration
         yield return useUnscaledTime ? new WaitForSecondsRealtime(duration) : new WaitForSeconds(duration);
         MoveToNextStep();
     }
 
+    /// <summary>
+    /// Handle waiting for user input steps.
+    /// Pauses the sequence until the user clicks the mouse.
+    /// </summary>
     private IEnumerator HandleWaitForInputStep()
     {
+        // Set flag to indicate waiting for input
         isWaitingForInput = true;
-        while (isWaitingForInput)
+        
+        // Wait until input is received
+        while (isWaitingForInput)  
         {
             yield return null;
         }
         MoveToNextStep();
     }
 
+    /// <summary>
+    /// Handle UI animation steps (scroll or transform animations).
+    /// Supports both blocking and non-blocking animation modes.
+    /// </summary>
     private IEnumerator HandleUIAnimationStep(SequenceStep step)
     {
+        // Check for valid target panel or transform
         if (step.targetPanel == null && step.targetTransform == null)
         {
             Debug.LogWarning("No target panel or transform assigned for UI animation step!");
@@ -255,6 +342,7 @@ public class TypewriterSequence : MonoBehaviour
             yield break;
         }
 
+        // Execute the appropriate animation type
         switch (step.uiAnimationType)
         {
             case UIAnimationType.Scroll:
@@ -309,38 +397,51 @@ public class TypewriterSequence : MonoBehaviour
         MoveToNextStep();
     }
 
+    /// <summary>
+    /// Animate a RectTransform's anchored position (for UI panels).
+    /// Uses Lerp with animation curve for smooth movement.
+    /// </summary>
     private IEnumerator AnimatePanelScroll(RectTransform panel, Vector2 startPos, Vector2 endPos, float duration, AnimationCurve curve)
     {
         float elapsed = 0f;
-        panel.anchoredPosition = startPos;
+        panel.anchoredPosition = startPos;  // Set initial position
 
+        // Animate over time
         while (elapsed < duration)
         {
-            float t = curve.Evaluate(elapsed / duration);
-            panel.anchoredPosition = Vector2.Lerp(startPos, endPos, t);
+            float t = curve.Evaluate(elapsed / duration);  // Evaluate curve
+            panel.anchoredPosition = Vector2.Lerp(startPos, endPos, t);  // Interpolate position
             elapsed += useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
             yield return null;
         }
 
-        panel.anchoredPosition = endPos;
+        panel.anchoredPosition = endPos;  // Ensure final position is exact
     }
     
+    /// <summary>
+    /// Animate a Transform's position (for 3D objects or world space UI).
+    /// Uses Lerp with animation curve for smooth movement.
+    /// </summary>
     private IEnumerator AnimateTransform(Transform target, Vector3 startPos, Vector3 endPos, float duration, AnimationCurve curve)
     {
         float elapsed = 0f;
-        target.position = startPos;
+        target.position = startPos;  // Set initial position
 
+        // Animate over time
         while (elapsed < duration)
         {
-            float t = curve.Evaluate(elapsed / duration);
-            target.position = Vector3.Lerp(startPos, endPos, t);
+            float t = curve.Evaluate(elapsed / duration);  // Evaluate curve
+            target.position = Vector3.Lerp(startPos, endPos, t);  // Interpolate position
             elapsed += useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
             yield return null;
         }
 
-        target.position = endPos;
+        target.position = endPos;  // Ensure final position is exact
     }
 
+    /// <summary>
+    /// Handle SetActive steps by activating or deactivating GameObjects.
+    /// </summary>
     private void HandleSetActiveStep(SequenceStep step)
     {
         if (step.targetObject != null)
@@ -355,6 +456,10 @@ public class TypewriterSequence : MonoBehaviour
         MoveToNextStep();
     }
 
+    /// <summary>
+    /// Advance to the next step in the sequence.
+    /// Handles looping logic and sequence termination.
+    /// </summary>
     private void MoveToNextStep()
     {
         if (isSequenceRunning)
@@ -362,26 +467,31 @@ public class TypewriterSequence : MonoBehaviour
             currentStepIndex++;
             if (currentStepIndex < sequenceSteps.Length)
             {
-                ProcessCurrentStep();
+                ProcessCurrentStep();  // Continue to next step
             }
             else if (loopSequence)
             {
-                currentStepIndex = 0;
+                currentStepIndex = 0;  // Reset to beginning for loop
                 ProcessCurrentStep();
             }
             else
             {
-                isSequenceRunning = false;
+                isSequenceRunning = false;  // End sequence
             }
         }
     }
 
+    /// <summary>
+    /// Check if the current step allows skipping and perform the skip.
+    /// Called when user clicks during sequence execution.
+    /// </summary>
     private void CheckAndPerformSkip()
     {
         if (currentStepIndex < sequenceSteps.Length)
         {
             SequenceStep currentStep = sequenceSteps[currentStepIndex];
             
+            // Check if skipping is enabled and target index is valid
             if (currentStep.enableSkip && currentStep.skipToIndex >= 0 && currentStep.skipToIndex < sequenceSteps.Length)
             {
                 SkipToStep(currentStep.skipToIndex);
@@ -389,11 +499,16 @@ public class TypewriterSequence : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Skip to a specific step in the sequence.
+    /// Immediately executes all steps before the target and jumps to the specified step.
+    /// </summary>
+    /// <param name="stepIndex">Index of the step to skip to (0-based)</param>
     public void SkipToStep(int stepIndex)
     {
         if (stepIndex < 0 || stepIndex >= sequenceSteps.Length)
         {
-            return;
+            return;  // Invalid index
         }
 
         // Stop any current typewriter effect
@@ -409,7 +524,7 @@ public class TypewriterSequence : MonoBehaviour
         // Reset waiting state
         isWaitingForInput = false;
         
-        // Play all steps before the target index immediately
+        // Immediately execute all steps before the target index
         for (int i = 0; i < stepIndex; i++)
         {
             ExecuteStepImmediately(sequenceSteps[i]);
@@ -420,11 +535,16 @@ public class TypewriterSequence : MonoBehaviour
         ProcessCurrentStep();
     }
 
+    /// <summary>
+    /// Execute a step immediately without animations or delays.
+    /// Used when skipping to ensure all previous steps are in their final state.
+    /// </summary>
     private void ExecuteStepImmediately(SequenceStep step)
     {
         switch (step.actionType)
         {
             case SequenceActionType.TypeText:
+                // Show full text immediately
                 if (step.targetText != null)
                 {
                     step.targetText.text = step.textToType;
@@ -440,6 +560,7 @@ public class TypewriterSequence : MonoBehaviour
                 break;
 
             case SequenceActionType.UIAnimation:
+                // Jump to final animation positions
                 if (step.targetPanel != null && step.uiAnimationType == UIAnimationType.Scroll)
                 {
                     step.targetPanel.anchoredPosition = step.endPosition;
@@ -451,6 +572,7 @@ public class TypewriterSequence : MonoBehaviour
                 break;
 
             case SequenceActionType.SetActive:
+                // Apply active state immediately
                 if (step.targetObject != null)
                 {
                     step.targetObject.SetActive(step.setActiveState);
